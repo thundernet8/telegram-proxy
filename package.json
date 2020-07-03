@@ -1,0 +1,12 @@
+{
+  "name": "request-proxy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:thundernet8/request-proxy.git",
+  "author": "wuxueqian <xueqian.wu01@liulishuo.com>",
+  "license": "MIT",
+  "dependencies": {
+    "koa": "^2.13.0",
+    "koa-proxy": "^1.0.0-alpha.3"
+  }
+}
