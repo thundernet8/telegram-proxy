@@ -1,3 +1,3 @@
-module polywoo.com
+module main
 
 go 1.13

@@ -8,78 +8,12 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"os"
-	"strings"
+	// "os"
+	// "strings"
 )
 
-/*
-	Structs
-*/
-
 type requestPayloadStruct struct {
-	ProxyCondition string `json:"proxy_condition"`
-}
-
-/*
-	Utilities
-*/
-
-// Get env var or default
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
-}
-
-/*
-	Getters
-*/
-
-// Get the port to listen on
-func getListenAddress() string {
-	port := getEnv("PORT", "1338")
-	return ":" + port
-}
-
-// Get the url for a given proxy condition
-func getProxyUrl(proxyConditionRaw string) string {
-	proxyCondition := strings.ToUpper(proxyConditionRaw)
-
-	a_condtion_url := os.Getenv("A_CONDITION_URL")
-	b_condtion_url := os.Getenv("B_CONDITION_URL")
-	default_condtion_url := os.Getenv("DEFAULT_CONDITION_URL")
-
-	if proxyCondition == "A" {
-		return a_condtion_url
-	}
-
-	if proxyCondition == "B" {
-		return b_condtion_url
-	}
-
-	return default_condtion_url
-}
-
-/*
-	Logging
-*/
-
-// Log the typeform payload and redirect url
-func logRequestPayload(requestionPayload requestPayloadStruct, proxyUrl string) {
-	log.Printf("proxy_condition: %s, proxy_url: %s\n", requestionPayload.ProxyCondition, proxyUrl)
-}
-
-// Log the env variables required for a reverse proxy
-func logSetup() {
-	a_condtion_url := os.Getenv("A_CONDITION_URL")
-	b_condtion_url := os.Getenv("B_CONDITION_URL")
-	default_condtion_url := os.Getenv("DEFAULT_CONDITION_URL")
-
-	log.Printf("Server will run on: %s\n", getListenAddress())
-	log.Printf("Redirecting to A url: %s\n", a_condtion_url)
-	log.Printf("Redirecting to B url: %s\n", b_condtion_url)
-	log.Printf("Redirecting to Default url: %s\n", default_condtion_url)
+	Text string `json:"text"`
 }
 
 /*
@@ -123,7 +57,6 @@ func requestBodyDecoder(request *http.Request) *json.Decoder {
 // Parse the requests body
 func parseRequestBody(request *http.Request) requestPayloadStruct {
 	decoder := requestBodyDecoder(request)
-
 	var requestPayload requestPayloadStruct
 	err := decoder.Decode(&requestPayload)
 
@@ -137,24 +70,18 @@ func parseRequestBody(request *http.Request) requestPayloadStruct {
 // Given a request send it to the appropriate url
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	requestPayload := parseRequestBody(req)
-	url := getProxyUrl(requestPayload.ProxyCondition)
+	url := "https://api.telegram.org"
 
-	logRequestPayload(requestPayload, url)
+	log.Printf("proxy_url: %s\n", req.URL.Path)
+	log.Printf("send msg: %s\n", requestPayload.Text)
 
 	serveReverseProxy(url, res, req)
 }
 
-/*
-	Entry
-*/
-
 func main() {
-	// Log setup values
-	logSetup()
-
 	// start server
 	http.HandleFunc("/", handleRequestAndRedirect)
-	if err := http.ListenAndServe(getListenAddress(), nil); err != nil {
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		panic(err)
 	}
 }
